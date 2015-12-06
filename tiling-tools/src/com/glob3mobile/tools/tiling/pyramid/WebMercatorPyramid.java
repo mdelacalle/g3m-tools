@@ -39,7 +39,7 @@ public class WebMercatorPyramid
 
    private final int        _tileImageWidth;
    private final int        _tileImageHeight;
-
+   private final Tile       _topTile;
    private final List<Tile> _topTiles;
 
 
@@ -47,7 +47,8 @@ public class WebMercatorPyramid
                              final int tileImageHeight) {
       _tileImageWidth = tileImageWidth;
       _tileImageHeight = tileImageHeight;
-      _topTiles = Collections.unmodifiableList(Arrays.asList(createTopTile()));
+      _topTile = createTopTile();
+      _topTiles = Collections.unmodifiableList(Arrays.asList(_topTile));
    }
 
 
@@ -117,7 +118,7 @@ public class WebMercatorPyramid
    }
 
 
-   public static double toLatitudeDegrees(final double v) {
+   private static double toLatitudeDegrees(final double v) {
       final double exp = exp(-2 * PI * (1.0 - v - 0.5));
       final double atan = atan(exp);
       return toDegrees((PI / 2) - (2 * atan));
@@ -145,6 +146,47 @@ public class WebMercatorPyramid
       final double x = deltaLongitude / _tileImageWidth;
       final double y = deltaLatitude / _tileImageHeight;
       return new Point2D.Double(x, y);
+   }
+
+
+   @Override
+   public GEOSector sectorFor(final int level,
+                              final int column,
+                              final int row) {
+      final Tile tile = getTile(level, column, row);
+      return (tile == null) ? null : tile._sector;
+   }
+
+
+   public Tile getTile(final int level,
+                       final int column,
+                       final int row) {
+      return getTile(_topTile, level, column, row);
+   }
+
+
+   private Tile getTile(final Tile currentTile,
+                        final int level,
+                        final int column,
+                        final int row) {
+      final int currentTileLevel = currentTile._level;
+      if (level == currentTileLevel) {
+         return (currentTile._column == column) && (currentTile._row == row) ? currentTile : null;
+      }
+      else if (level < currentTileLevel) {
+         return null;
+      }
+      else {
+         //         final int deltaLevel = level - currentTileLevel;
+         final List<Tile> children = createChildren(GEOSector.fullSphere(), currentTile);
+         for (final Tile child : children) {
+            final Tile candidate = getTile(child, level, column, row);
+            if (candidate != null) {
+               return candidate;
+            }
+         }
+         return null;
+      }
    }
 
 

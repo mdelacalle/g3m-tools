@@ -53,4 +53,9 @@ public abstract class Pyramid {
 
    public abstract void checkCRS(GridCoverage2D coverage);
 
+
+   public abstract GEOSector sectorFor(int level,
+                                       int column,
+                                       int row);
+
 }

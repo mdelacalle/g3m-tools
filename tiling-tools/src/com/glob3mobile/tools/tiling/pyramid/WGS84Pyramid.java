@@ -181,4 +181,26 @@ public class WGS84Pyramid
    }
 
 
+   @Override
+   public GEOSector sectorFor(final int level,
+                              final int column,
+                              final int row) {
+      // TODO: this method assumes _topSector == FULL_SPHERE
+
+      final int splitsByLatitude = _topSectorSplitsByLatitude * (int) Math.pow(2, level);
+      final int splitsByLongitude = _topSectorSplitsByLongitude * (int) Math.pow(2, level);
+
+      final double deltaLatitude = 180.0 / splitsByLatitude;
+      final double deltaLongitude = 360.0 / splitsByLongitude;
+
+      final GEOGeodetic lower = new GEOGeodetic( //
+               90 - (deltaLatitude * (row + 1)), //
+               -180 + (deltaLongitude * column));
+      final GEOGeodetic upper = new GEOGeodetic( //
+               lower._latitude + deltaLatitude, //
+               lower._longitude + deltaLongitude);
+
+      return new GEOSector(lower, upper);
+   }
+
 }
