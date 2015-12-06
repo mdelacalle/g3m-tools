@@ -338,7 +338,8 @@ public class Tiler {
 
          final BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
          final Graphics2D g2d = result.createGraphics();
-         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+         //         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+         g2d.setRenderingHints(getHQRenderingHints());
 
          final int dx1 = 0;
          final int dy1 = 0;
@@ -359,20 +360,14 @@ public class Tiler {
       }
 
 
-      //      private static BufferedImage toBufferedImage(final Image image) {
-      //         if (image == null) {
-      //            return null;
-      //         }
-      //         if (image instanceof BufferedImage) {
-      //            return (BufferedImage) image;
-      //         }
-      //
-      //         final BufferedImage result = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-      //         final Graphics2D g = result.createGraphics();
-      //         g.drawImage(image, 0, 0, null);
-      //         g.dispose();
-      //         return result;
-      //      }
+      private static RenderingHints getHQRenderingHints() {
+         final RenderingHints hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+         hints.put(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+         hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+         hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+         return hints;
+      }
+
 
    }
 
@@ -409,8 +404,6 @@ public class Tiler {
          levels[i] = null; // release some memory
       }
 
-      //      final File outputFile = new File("/Users/dgd/Desktop/TEST.jpeg");
-      //      ImageIO.write(geoImage._bufferedImage, "jpeg", outputFile);
 
       Logger.log("done!");
    }
