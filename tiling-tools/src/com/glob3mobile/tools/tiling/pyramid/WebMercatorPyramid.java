@@ -165,28 +165,44 @@ public class WebMercatorPyramid
    }
 
 
-   private Tile getTile(final Tile currentTile,
+   private Tile getTile(final Tile tile,
                         final int level,
                         final int column,
                         final int row) {
-      final int currentTileLevel = currentTile._level;
-      if (level == currentTileLevel) {
-         return (currentTile._column == column) && (currentTile._row == row) ? currentTile : null;
-      }
-      else if (level < currentTileLevel) {
+      final int tileLevel = tile._level;
+      if (level < tileLevel) {
          return null;
       }
+      else if (level == tileLevel) {
+         return (tile._column == column) && (tile._row == row) ? tile : null;
+      }
       else {
-         //         final int deltaLevel = level - currentTileLevel;
-         final List<Tile> children = createChildren(GEOSector.fullSphere(), currentTile);
-         for (final Tile child : children) {
-            final Tile candidate = getTile(child, level, column, row);
-            if (candidate != null) {
-               return candidate;
+         final int deltaLevel2 = (int) pow(2, (level - tileLevel));
+         final int rowAtCurrentLevel = row / deltaLevel2;
+         final int columnAtCurrentLevel = column / deltaLevel2;
+
+         if ((rowAtCurrentLevel == tile._row) && (columnAtCurrentLevel == tile._column)) {
+            final List<Tile> children = createChildren(GEOSector.fullSphere(), tile);
+            for (final Tile child : children) {
+               final Tile candidate = getTile(child, level, column, row);
+               if (candidate != null) {
+                  return candidate;
+               }
             }
          }
          return null;
       }
+   }
+
+
+   public static void main(final String[] args) {
+      final int level = 4;
+      final int column = 8;
+      final int row = 0;
+
+      final WebMercatorPyramid pyramid = (WebMercatorPyramid) WebMercatorPyramid.createDefault();
+      final Tile tile = pyramid.getTile(level, column, row);
+      System.out.println(tile);
    }
 
 

@@ -4,7 +4,6 @@ package com.glob3mobile.utils;
 
 
 import java.awt.image.BufferedImage;
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -21,23 +20,10 @@ public class IOUtils {
    }
 
 
-   public static void gentlyClose(final Closeable closeable) {
-      if (closeable != null) {
-         try {
-            closeable.close();
-         }
-         catch (final IOException e) {
-         }
-      }
-   }
-
-
    public static void writeJPEG(final BufferedImage image,
                                 final File output,
                                 final float quality) throws IOException {
-      ImageOutputStream ios = null;
-      try {
-         ios = ImageIO.createImageOutputStream(output);
+      try (final ImageOutputStream ios = ImageIO.createImageOutputStream(output)) {
          final Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName("jpeg");
          final ImageWriter writer = iter.next();
          final ImageWriteParam iwp = writer.getDefaultWriteParam();
@@ -46,9 +32,6 @@ public class IOUtils {
          writer.setOutput(ios);
          writer.write(null, new IIOImage(image, null, null), iwp);
          writer.dispose();
-      }
-      finally {
-         IOUtils.gentlyClose(ios);
       }
    }
 

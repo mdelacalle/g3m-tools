@@ -157,14 +157,17 @@ public class MergedPyramid {
                   BufferedImage.TYPE_4BYTE_ABGR);
 
          final Graphics2D g2d = image.createGraphics();
-         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+         // g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+         g2d.setRenderingHints(getHQRenderingHints());
 
          final GEOSector tileSector = _pyramid.sectorFor(_column._level._level, _column._column, _row);
 
          for (final SourcePyramidTile ancestor : ancestors) {
             final BufferedImage ancestorImage = ImageIO.read(ancestor.getImageFile());
 
-            final GEOSector ancestorSector = _pyramid.sectorFor(ancestor._column._level._level, ancestor._column._column,
+            final GEOSector ancestorSector = _pyramid.sectorFor( //
+                     ancestor._column._level._level, //
+                     ancestor._column._column, //
                      ancestor._row);
 
             final Point2D lowerUV = ancestorSector.getUVCoordinates(tileSector._lower);
@@ -175,29 +178,31 @@ public class MergedPyramid {
 
             final int dx1 = 0;
             final int dy1 = 0;
-            final int dx2 = 256;
-            final int dy2 = 256;
+            final int dx2 = _pyramid.getTileImageWidth();
+            final int dy2 = _pyramid.getTileImageHeight();
             final int sx1 = (int) Math.round(lowerUV.getX() * ancestorImageWidth);
             final int sy2 = (int) Math.round(lowerUV.getY() * ancestorImageHeight);
             final int sx2 = (int) Math.round(upperUV.getX() * ancestorImageWidth);
             final int sy1 = (int) Math.round(upperUV.getY() * ancestorImageHeight);
             g2d.drawImage(ancestorImage, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, null);
-
-            // g2d.drawImage(ancestorImage, 0, 0, null);
          }
 
          for (final BufferedImage sourceImage : sourceImageFiles) {
             g2d.drawImage(sourceImage, 0, 0, null);
          }
 
-
-         //         g2d.setPaint(Color.YELLOW);
-         //         g2d.drawString("lower=" + tileSector._lower, 2, 250 - 18);
-         //         g2d.drawString("upper=" + tileSector._upper, 2, 250);
-
          g2d.dispose();
 
          saveImage(output, image, mutex);
+      }
+
+
+      private RenderingHints getHQRenderingHints() {
+         final RenderingHints hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+         hints.put(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+         hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+         hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+         return hints;
       }
 
 
@@ -350,12 +355,15 @@ public class MergedPyramid {
    private final Pyramid                   _pyramid;
    private final SourcePyramid[]           _sourcePyramids;
    private final Map<Integer, MergedLevel> _levels = new HashMap<>();
+   private final float                     _jpegQuality;
 
 
    public MergedPyramid(final Pyramid pyramid,
-                        final SourcePyramid[] sourcePyramids) {
+                        final SourcePyramid[] sourcePyramids,
+                        final float jpegQuality) {
       _pyramid = pyramid;
       _sourcePyramids = sourcePyramids;
+      _jpegQuality = jpegQuality;
 
       for (final SourcePyramid sourcePyramid : _sourcePyramids) {
          for (final SourcePyramidLevel sourceLevel : sourcePyramid.getLevels()) {
@@ -399,9 +407,9 @@ public class MergedPyramid {
    }
 
 
-   private static void saveImage(final File output,
-                                 final BufferedImage image,
-                                 final Object mutex) throws IOException {
+   private void saveImage(final File output,
+                          final BufferedImage image,
+                          final Object mutex) throws IOException {
       synchronized (mutex) {
          final File directory = output.getParentFile();
          if (!directory.exists()) {
@@ -416,7 +424,7 @@ public class MergedPyramid {
       g2d.drawImage(image, 0, 0, null);
       g2d.dispose();
 
-      IOUtils.writeJPEG(imageRGB, output, 0.9f);
+      IOUtils.writeJPEG(imageRGB, output, _jpegQuality);
    }
 
 

@@ -26,7 +26,8 @@ public class TilesMixer {
 
    public static void processSubdirectories(final Pyramid pyramid,
                                             final String inputDirectoryName,
-                                            final String outputDirectoryName) throws IOException {
+                                            final String outputDirectoryName,
+                                            final float jpegQuality) throws IOException {
       final File inputDirectory = new File(inputDirectoryName);
       if (!inputDirectory.exists()) {
          throw new IOException("Input directory \"" + inputDirectoryName + "\" doesn't exist");
@@ -43,15 +44,16 @@ public class TilesMixer {
       .map(source -> new File(inputDirectory, source).getAbsolutePath()) //
       .collect(Collectors.toList());
 
-      final TilesMixer mixer = new TilesMixer(pyramid, inputDirectoriesNames, outputDirectoryName);
+      final TilesMixer mixer = new TilesMixer(pyramid, inputDirectoriesNames, outputDirectoryName, jpegQuality);
       mixer.process();
    }
 
 
    public static void processDirectories(final Pyramid pyramid,
                                          final List<String> inputDirectoriesNames,
-                                         final String outputDirectoryName) throws IOException {
-      final TilesMixer mixer = new TilesMixer(pyramid, inputDirectoriesNames, outputDirectoryName);
+                                         final String outputDirectoryName,
+                                         final float jpegQuality) throws IOException {
+      final TilesMixer mixer = new TilesMixer(pyramid, inputDirectoriesNames, outputDirectoryName, jpegQuality);
       mixer.process();
    }
 
@@ -59,11 +61,13 @@ public class TilesMixer {
    private final Pyramid _pyramid;
    private final File[]  _inputDirectories;
    private final File    _outputDirectory;
+   private final float   _jpegQuality;
 
 
    TilesMixer(final Pyramid pyramid,
               final List<String> inputDirectoriesNames,
-              final String outputDirectoryName) throws IOException {
+              final String outputDirectoryName,
+              final float jpegQuality) throws IOException {
       _pyramid = pyramid;
       _inputDirectories = new File[inputDirectoriesNames.size()];
       for (int i = 0; i < inputDirectoriesNames.size(); i++) {
@@ -75,6 +79,8 @@ public class TilesMixer {
 
       _outputDirectory = new File(outputDirectoryName);
       IOUtils.ensureEmptyDirectory(_outputDirectory);
+
+      _jpegQuality = jpegQuality;
    }
 
 
@@ -127,7 +133,7 @@ public class TilesMixer {
 
 
    private void process() throws IOException {
-      final MergedPyramid mergedPyramid = new MergedPyramid(_pyramid, getSourcePyramids());
+      final MergedPyramid mergedPyramid = new MergedPyramid(_pyramid, getSourcePyramids(), _jpegQuality);
       //mergedPyramid.merge(_outputDirectory);
 
       final int scaleFactor = 2;
@@ -181,7 +187,9 @@ public class TilesMixer {
       final String inputDirectoryName = "/Volumes/SSD1/_TEST_/mercator_TrueMarble.1km/";
       final String outputDirectoryName = "/Volumes/SSD1/_TEST_/mercator_TrueMarble.1km_merged/";
       final Pyramid pyramid = WebMercatorPyramid.createDefault();
-      TilesMixer.processSubdirectories(pyramid, inputDirectoryName, outputDirectoryName);
+      final float jpegQuality = 0.9f;
+
+      TilesMixer.processSubdirectories(pyramid, inputDirectoryName, outputDirectoryName, jpegQuality);
    }
 
 
